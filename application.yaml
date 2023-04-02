@@ -1,0 +1,29 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    username: searchadmin
+    password: admin7Search
+    url: jdbc:mysql://localhost:3306/search_engine?useSSL=false&requireSSL=false&allowPublicKeyRetrieval=true
+  jpa:
+    properties:
+      hibernate:
+      dialect: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+connection-settings:
+  userAgent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0
+  referrer: LocalSearchEngine
+
+indexing-settings:
+  sites:
+    - url: https://nikoartgallery.com/
+      name: Арт галерея Нико Никогосяна
+    - url: https://www.lutherancathedral.ru/
+      name: Лютеранская церковь
+    - url: https://dombulgakova.ru/
+      name: Дом Булгакова
+    - url: https://et-cetera.ru/
+      name: Театр ET Cetera
