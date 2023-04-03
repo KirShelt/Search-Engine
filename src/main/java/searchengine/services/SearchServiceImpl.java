@@ -132,11 +132,8 @@ public class SearchServiceImpl implements SearchService {
         if (relativeRelevancyMap != null) {
             response.setCount(relativeRelevancyMap.size());
             List<DetailedSearchItem> items = new ArrayList<>();
-            int i = 0;
-            List<PageEntity> resultsList = new ArrayList<>(relativeRelevancyMap.keySet());
+            List<PageEntity> resultsList = relativeRelevancyMap.keySet().stream().skip(offset).limit(limit).toList();
             for (PageEntity page : resultsList) {
-                i++;
-                if (i <= offset || i > (offset + limit)) continue;
                 DetailedSearchItem item = new DetailedSearchItem();
                 SiteEntity site = page.getSiteId();
                 item.setSite(site.getUrl().substring(0, site.getUrl().length() - 1));
@@ -149,8 +146,7 @@ public class SearchServiceImpl implements SearchService {
                 items.add(item);
             }
             response.setData(items);
-        }
-        else {
+        } else {
             response.setCount(0);
             response.setData(new ArrayList<>());
         }
@@ -158,7 +154,6 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private String snippetFormation(Document doc, Set<String> queryLemmaList) {
-        //TODO сформировать корректный сниппет
         LemmaFinder lemmaFinder;
         try {
             lemmaFinder = LemmaFinder.getInstance();
