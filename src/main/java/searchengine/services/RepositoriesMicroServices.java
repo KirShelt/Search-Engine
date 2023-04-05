@@ -22,15 +22,12 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-//@Scope(value = "prototype")
 public class RepositoriesMicroServices {
     private final SiteRepository siteRepository;
     private final PageRepository pageRepository;
     private final LemmaRepository lemmaRepository;
     private final IndexRepository indexRepository;
     private final ConnectionSettings connectionSettings;
-//    private final LuceneMorphology luceneMorphology;
-//    private final ObjectProvider<LemmaFinder> provider;
 
     SiteEntity createSiteEntity(Site site) {
         SiteEntity newSite = new SiteEntity();
@@ -44,7 +41,7 @@ public class RepositoriesMicroServices {
     }
 
     void clearSiteIfExists(String url) {
-        SiteEntity currentIndexingSite = siteRepository.findByUrl(url);
+        SiteEntity currentIndexingSite = siteRepository.findFirstByUrl(url);
         if (currentIndexingSite != null) siteRepository.delete(currentIndexingSite);
     }
 
@@ -88,11 +85,7 @@ public class RepositoriesMicroServices {
 
     void lemmatizePage(PageEntity pageId) throws IOException {
         if (!IndexingServiceImpl.indexing) return;
-
         LemmaFinder lemmaFinder = LemmaFinder.getInstance();
-//        LemmaFinder lemmaFinder = provider.getIfUnique();
-//        assert lemmaFinder !=null;
-//        lemmaFinder.setLuceneMorphology();
 
         Document doc = Jsoup.parse(pageId.getContent());
         LemmaUtils util = new LemmaUtils();
@@ -102,7 +95,7 @@ public class RepositoriesMicroServices {
         for (String key : map.keySet()) {
             if (!IndexingServiceImpl.indexing) break;
             synchronized (lemmaRepository) {
-                LemmaEntity lemmaEntity = lemmaRepository.findBySiteAndLemma(pageId.getSiteId().getId(), key);
+                LemmaEntity lemmaEntity = lemmaRepository.findFirstBySiteIdAndLemma(pageId.getSiteId(), key);
                 if (lemmaEntity == null) {
                     lemmaEntity = new LemmaEntity();
                     lemmaEntity.setLemma(key);

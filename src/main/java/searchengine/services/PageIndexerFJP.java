@@ -43,6 +43,7 @@ public class PageIndexerFJP extends RecursiveAction {
         try {
             Thread.sleep((int) (Math.random() * 500 + 500));
             PageData currentPage = repositoriesMicroServices.collectPageDataAndSave(node, siteEntity);
+            if (currentPage==null) return;
             repositoriesMicroServices.lemmatizePage(currentPage.getPageEntity());
             Elements hrefElements = currentPage.getDocument().select("a");
 
@@ -60,7 +61,6 @@ public class PageIndexerFJP extends RecursiveAction {
                 String regex = "[a-zа-яё0-9_\\-/]+";
 
                 if (IndexingServiceImpl.indexing && href.matches(regex) && (!results.contains(fullurl))) {
-//                    PageIndexerFJP task = new PageIndexerFJP();
                     PageIndexerFJP task = provider.getIfUnique();
                     assert task != null;
                     task.setInitial(siteEntity, fullurl);

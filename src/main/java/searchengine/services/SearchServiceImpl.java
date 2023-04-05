@@ -41,7 +41,7 @@ public class SearchServiceImpl implements SearchService {
 
         List<SiteEntity> siteList = new ArrayList<>();
         if (searchInputData.getSite() != null) {
-            siteList.add(siteRepository.findByUrl(searchInputData.getSite()));
+            siteList.add(siteRepository.findFirstByUrl(searchInputData.getSite()));
         } else siteList.addAll(siteRepository.findAll());
 
         try {
@@ -50,7 +50,7 @@ public class SearchServiceImpl implements SearchService {
 
             HashMap<PageEntity, Float> absoluteRelevancyMap = new HashMap<>();
             for (SiteEntity siteN : siteList) {
-                Map<PageEntity, Float> relevancyOnSite = getAbsoluteRelevancyMapOnSite(siteN.getId(), lemmaList);
+                Map<PageEntity, Float> relevancyOnSite = getAbsoluteRelevancyMapOnSite(siteN/*.getId()*/, lemmaList);
                 if (relevancyOnSite != null) absoluteRelevancyMap.putAll(relevancyOnSite);
             }
             LinkedHashMap<PageEntity, Float> relativeRelevancyMap = getSortedRelativeRelevancy(absoluteRelevancyMap);
@@ -64,10 +64,10 @@ public class SearchServiceImpl implements SearchService {
         return searchResponse;
     }
 
-    private Map<PageEntity, Float> getAbsoluteRelevancyMapOnSite(int siteId, Set<String> lemmas) {
+    private Map<PageEntity, Float> getAbsoluteRelevancyMapOnSite(SiteEntity/*int*/ siteId, Set<String> lemmas) {
         List<LemmaEntity> lemmaEntityList = new ArrayList<>();
         for (String lemma : lemmas) {
-            LemmaEntity lemmaEntity = lemmaRepository.findBySiteAndLemma(siteId, lemma);
+            LemmaEntity lemmaEntity = lemmaRepository.findFirstBySiteIdAndLemma(siteId, lemma);
             if (lemmaEntity == null) {
                 return null;
             } else lemmaEntityList.add(lemmaEntity);
@@ -86,8 +86,8 @@ public class SearchServiceImpl implements SearchService {
                     tempPageEntitySet.add(index.getPageId()));
             pageEntitySet.retainAll(tempPageEntitySet);
         }
-//                pageEntitySet!!!
-//                lemmaEntityList!!!
+//                pageEntitySet - список страниц, включающих все поисковые леммы (на ТЕКУЩЕМ сайте)
+//                lemmaEntityList - список поисковых лемм
         if (pageEntitySet.size() < 1) {
             return null;
         }
@@ -96,7 +96,7 @@ public class SearchServiceImpl implements SearchService {
         pageEntitySet.forEach(p -> {
             pageRankingMap.put(p, 0f);
             lemmaEntityList.forEach(l -> {
-                float rank = indexRepository.findContains(l.getId(), p.getId());
+                float rank = indexRepository.findFirstByLemmaIdAndPageId(l, p).getRank();
                 pageRankingMap.put(p, pageRankingMap.get(p) + rank);
             });
         });
@@ -157,14 +157,12 @@ public class SearchServiceImpl implements SearchService {
         LemmaFinder lemmaFinder;
         try {
             lemmaFinder = LemmaFinder.getInstance();
-//            doc = lemmaFinder.removeScriptsAndStyles(doc);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         LemmaUtils util = new LemmaUtils();
         String text = util.removeScriptsAndStyles(doc).text();
-//        String text = "Мама мыла раму, 1234баба мыла маму.";
         if (queryLemmaList.size() < 1 || text.length() < 1) return "";
         HashMap<Integer, String> words = findRussianWordsMap(text);
         TreeMap<Integer, String> pageUsefulWordMap = new TreeMap<>();

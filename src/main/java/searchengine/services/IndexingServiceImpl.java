@@ -34,7 +34,6 @@ public class IndexingServiceImpl implements IndexingService {
     @Override
     public IndexingResponse startIndexing() {
         IndexingResponse response = new IndexingResponse();
-//        defineIndexingStatus();
         response.setResult(!indexing);
 
         if (!indexing) {
@@ -42,7 +41,6 @@ public class IndexingServiceImpl implements IndexingService {
             PageIndexerFJP.results.clear();
             List<Site> sitesList = sites.getSites();
             for (Site site : sitesList) {
-//                SiteIndexer indexer = new SiteIndexer();
                 SiteIndexer indexer = provider.getIfUnique();
                 assert indexer != null;
                 indexer.setSite(site);
@@ -60,7 +58,7 @@ public class IndexingServiceImpl implements IndexingService {
         response.setResult(indexing);
         if (indexing) {
             indexing = false;
-            List<SiteEntity> currentIndexingSite = siteRepository.findIndexing();
+            List<SiteEntity> currentIndexingSite = siteRepository.findByStatus(IndexStatus.INDEXING);
             for (SiteEntity e : currentIndexingSite) {
                 e.setStatus(IndexStatus.FAILED);
                 e.setLastError("Индексация остановлена пользователем");
@@ -74,7 +72,7 @@ public class IndexingServiceImpl implements IndexingService {
     @Override
     public IndexingResponse indexPage(String pageUrl) {
         IndexingResponse response = new IndexingResponse();
-//        defineIndexingStatus();
+        defineIndexingStatus();
         if (indexing) {
             response.setError("Индексация уже запущена");
             return response;
@@ -86,14 +84,14 @@ public class IndexingServiceImpl implements IndexingService {
             return response;
         }
         indexing = true;
-        SiteEntity siteEntity = siteRepository.findByUrl(validSite.getUrl());
+        SiteEntity siteEntity = siteRepository.findFirstByUrl(validSite.getUrl());
         if (siteEntity == null) {
             siteEntity = repositoriesMicroServices.createSiteEntity(validSite);
             siteEntity.setStatus(IndexStatus.FAILED);
             siteEntity.setLastError("Полная индексация не проводилась");
             siteRepository.save(siteEntity);
         }
-        PageEntity pageEntity = pageRepository.findBySiteAndPath(siteEntity.getId(),
+        PageEntity pageEntity = pageRepository.findFirstBySiteIdAndPath(siteEntity,
                 pageUrl.replaceFirst(siteEntity.getUrl(), "/"));
 
         if (pageEntity != null) {
@@ -132,8 +130,8 @@ public class IndexingServiceImpl implements IndexingService {
         return null;
     }
 
-    private void defineIndexingStatus(){
-        List<SiteEntity> currentIndexingSite = siteRepository.findIndexing();
+    private void defineIndexingStatus() {
+        List<SiteEntity> currentIndexingSite = siteRepository.findByStatus(IndexStatus.INDEXING);
         indexing = currentIndexingSite.size() != 0;
     }
 }

@@ -19,8 +19,6 @@ connection-settings:
 
 indexing-settings:
   sites:
-    - url: https://nikoartgallery.com/
-      name: Арт галерея Нико Никогосяна
     - url: https://www.lutherancathedral.ru/
       name: Лютеранская церковь
     - url: https://dombulgakova.ru/

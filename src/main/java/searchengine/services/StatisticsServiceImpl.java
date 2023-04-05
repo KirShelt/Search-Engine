@@ -45,12 +45,10 @@ public class StatisticsServiceImpl implements StatisticsService {
             String status = "FAILED";
             String error = "Индексация не проводилась";
             Date time = new Date();
-            SiteEntity currentSite = siteRepository.findByUrl(url);
+            SiteEntity currentSite = siteRepository.findFirstByUrl(url);
             if (currentSite != null) {
-                pages = pageRepository.countBySite(currentSite.getId());
-//                pages = currentSite.getPageEntitySet().size();
-                lemmas = lemmaRepository.countBySite(currentSite.getId());
-//                lemmas = currentSite.getLemmaEntitySet().size();
+                pages = pageRepository.countBySiteId(currentSite);
+                lemmas = lemmaRepository.countBySiteId(currentSite);
                 status = currentSite.getStatus().toString();
                 error = currentSite.getLastError();
                 time = currentSite.getStatusTime();
